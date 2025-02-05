@@ -40,11 +40,8 @@ export default function WalletModal({
   useEffect(() => {
     if (selectedWallet) {
       connect().catch((error: any) => {
-        if (error.message.includes('Connection rejected')) {
-          console.log('User rejected connection');
-          return;
-        }
-        console.error('Failed to connect:', error);
+        // Silently handle rejection by just resetting state
+        setSelectedWallet(null);
       });
     }
   }, [selectedWallet, connect]);

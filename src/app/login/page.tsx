@@ -1,5 +1,6 @@
 'use client';
 
+import '@/utils/suppress-console';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation'; // Updated import for Next.js 13
 import TopBar from '../../components/TopBar'; // Adjust the path as necessary
