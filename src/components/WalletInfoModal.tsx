@@ -2,7 +2,19 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
 
-export default function WalletInfoModal({ isOpen, onClose, connectedAddress, onDisconnect }: { isOpen: boolean; onClose: () => void; connectedAddress: string | null; onDisconnect: () => void }) {
+export default function WalletInfoModal({ 
+  isOpen, 
+  onClose, 
+  connectedAddress, 
+  onDisconnect,
+  navigate 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  connectedAddress: string | null; 
+  onDisconnect: () => void;
+  navigate: (path: string) => void;
+}) {
   const [isAnimating, setIsAnimating] = useState(false);
   const { disconnect } = useWallet();
   const router = useRouter();
@@ -23,10 +35,10 @@ export default function WalletInfoModal({ isOpen, onClose, connectedAddress, onD
 
   const handleDisconnect = async () => {
     console.log('Disconnecting wallet and clearing local storage');
+    onClose();
+    localStorage.removeItem('connectedAddress');
     await disconnect();
     onDisconnect();
-    onClose();
-    router.push('/login'); // Navigate to login page
   };
 
   if (!isAnimating && !isOpen) return null;

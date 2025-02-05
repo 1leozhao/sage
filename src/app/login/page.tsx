@@ -79,6 +79,7 @@ export default function Login() {
             onConnect={toggleModal} 
             connectedAddress={connectedAddress} 
             onDisconnect={handleWalletDisconnect}
+            navigate={router.push}
           />
           <WalletModal 
             isOpen={isModalOpen} 

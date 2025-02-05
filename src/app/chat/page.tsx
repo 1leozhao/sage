@@ -1,5 +1,6 @@
 'use client';
 
+import '@/utils/suppress-console';
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import TopBar from '../../components/TopBar'; // Adjust the path as necessary
 import { PortfolioBox } from '../../components/responses/PortfolioBox'; // Adjust the path as necessary
@@ -9,6 +10,8 @@ import { CoinbaseWalletAdapter, SolflareWalletAdapter, PhantomWalletAdapter } fr
 import { useRouter } from 'next/navigation';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { clusterApiUrl } from '@solana/web3.js';
+import ConnectPromptModal from '../../components/ConnectPromptModal';
+import WalletModal from '../../components/WalletModal';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -154,38 +157,60 @@ const endpoint = clusterApiUrl(network);
 const ChatContent = () => {
   const router = useRouter();
   const [connectedAddress, setConnectedAddress] = useState<string | null>(null);
-  const { disconnect } = useWallet();
+  const [showConnectPrompt, setShowConnectPrompt] = useState(false);
+  const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
+  const { disconnect, wallet } = useWallet();
 
   useEffect(() => {
     const storedAddress = localStorage.getItem('connectedAddress');
-    if (storedAddress) {
-      setConnectedAddress(storedAddress);
+    if (!storedAddress) {
+      setShowConnectPrompt(true);
     } else {
-      router.push('/login');
+      setConnectedAddress(storedAddress);
     }
-  }, [router]);
+  }, []);
 
   const handleDisconnect = useCallback(async () => {
     try {
-      await disconnect();
+      if (wallet) {
+        await disconnect();
+      }
       localStorage.removeItem('connectedAddress');
       setConnectedAddress(null);
-      router.push('/login');
+      setShowConnectPrompt(false);
+      setTimeout(() => {
+        setShowConnectPrompt(true);
+      }, 10);
+      setIsWalletModalOpen(false);
     } catch (error) {
       console.error('Error disconnecting wallet:', error);
     }
-  }, [disconnect, router]);
+  }, [disconnect, wallet]);
 
-  if (!connectedAddress) {
-    return null;
-  }
+  const handleWalletConnect = useCallback((address: string) => {
+    localStorage.setItem('connectedAddress', address);
+    setConnectedAddress(address);
+    setShowConnectPrompt(false);
+    setIsWalletModalOpen(false);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       <TopBar 
-        onConnect={() => {}} 
-        connectedAddress={connectedAddress} 
+        onConnect={() => setIsWalletModalOpen(true)}
+        connectedAddress={connectedAddress}
         onDisconnect={handleDisconnect}
+        navigate={router.push}
+      />
+      <ConnectPromptModal
+        isOpen={showConnectPrompt}
+        onConnect={() => setIsWalletModalOpen(true)}
+      />
+      <WalletModal 
+        isOpen={isWalletModalOpen} 
+        onClose={() => setIsWalletModalOpen(false)} 
+        navigate={router.push}
+        onWalletConnect={handleWalletConnect}
       />
       <div className="flex flex-1" style={{ marginTop: '5rem' }}>
         <div className="w-64">
@@ -194,7 +219,7 @@ const ChatContent = () => {
         
         <div className="flex-1 p-2">
           <div className="bg-white rounded-lg shadow-md overflow-y-auto h-full">
-            <AIAssistant address={connectedAddress} />
+            <AIAssistant address={connectedAddress || undefined} />
           </div>
         </div>
       </div>
