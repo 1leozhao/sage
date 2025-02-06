@@ -116,29 +116,30 @@ function AIAssistant({ address, chatId, chats, onUpdateChat, onFirstMessage }: A
               <p className="text-gray-600 mb-8">
                 Explore the Solana ecosystem.
               </p>
-              <form onSubmit={handleSubmit} className="flex flex-col space-y-2 mt-4">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="text"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    className="flex-1 p-4 border border-gray-300 rounded-lg"
-                    placeholder="Type your message..."
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSubmit(e as any);
-                      }
-                    }}
-                  />
-                </div>
-                <div className="flex justify-between items-center px-2">
-                  <ModelSelector
-                    selectedModel={selectedModel}
-                    onModelChange={setSelectedModel}
-                  />
-                </div>
-              </form>
+              <div className="w-full max-w-2xl">
+                <form onSubmit={handleSubmit} className="relative">
+                  <div className="relative">
+                    <textarea
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      placeholder="Ask the sage anything..."
+                      className="w-full h-24 px-4 pt-2 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-black placeholder:text-gray-500"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSubmit(e as any);
+                        }
+                      }}
+                    />
+                    <div className="absolute left-2 bottom-3">
+                      <ModelSelector
+                        selectedModel={selectedModel}
+                        onModelChange={setSelectedModel}
+                      />
+                    </div>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
         ) : (
@@ -179,14 +180,13 @@ function AIAssistant({ address, chatId, chats, onUpdateChat, onFirstMessage }: A
               )}
               <div ref={messagesEndRef} />
             </div>
-            <form onSubmit={handleSubmit} className="flex flex-col space-y-2 mt-4">
-              <div className="flex items-center space-x-2">
-                <input
-                  type="text"
+            <form onSubmit={handleSubmit} className="relative">
+              <div className="relative">
+                <textarea
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  className="flex-1 p-4 border border-gray-300 rounded-lg"
-                  placeholder="Type your message..."
+                  placeholder="Ask the sage anything..."
+                  className="w-full h-24 px-4 pt-2 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-black placeholder:text-gray-500"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
@@ -194,12 +194,12 @@ function AIAssistant({ address, chatId, chats, onUpdateChat, onFirstMessage }: A
                     }
                   }}
                 />
-              </div>
-              <div className="flex justify-between items-center px-2">
-                <ModelSelector
-                  selectedModel={selectedModel}
-                  onModelChange={setSelectedModel}
-                />
+                <div className="absolute left-2 bottom-3">
+                  <ModelSelector
+                    selectedModel={selectedModel}
+                    onModelChange={setSelectedModel}
+                  />
+                </div>
               </div>
             </form>
           </>
