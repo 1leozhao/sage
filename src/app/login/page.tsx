@@ -2,16 +2,15 @@
 
 import '@/utils/suppress-console';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useRouter } from 'next/navigation'; // Updated import for Next.js 13
-import TopBar from '../../components/TopBar'; // Adjust the path as necessary
-import WalletModal from '../../components/WalletModal'; // Adjust the path as necessary
+import { useRouter } from 'next/navigation';
+import TopBar from '../../components/TopBar';
+import WalletModal from '../../components/WalletModal';
 import { WalletProvider, ConnectionProvider } from '@solana/wallet-adapter-react';
 import { PhantomWalletAdapter, SolflareWalletAdapter, CoinbaseWalletAdapter } from '@solana/wallet-adapter-wallets';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { clusterApiUrl } from '@solana/web3.js';
 
-// Define the network and endpoint
-const network = WalletAdapterNetwork.Mainnet; // or 'devnet', 'testnet'
+const network = WalletAdapterNetwork.Mainnet;
 const endpoint = clusterApiUrl(network);
 
 export default function Login() {
@@ -64,7 +63,6 @@ export default function Login() {
     setIsLoggedIn(false);
   }, []);
 
-  // Memoize wallets
   const wallets = useMemo(() => [
     new PhantomWalletAdapter(),
     new SolflareWalletAdapter(),

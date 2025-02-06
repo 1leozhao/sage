@@ -54,7 +54,7 @@ export default function TopBar({
   };
 
   useEffect(() => {
-    console.log('TopBar received connectedAddress:', connectedAddress); // Debugging log
+    console.log('TopBar received connectedAddress:', connectedAddress);
   }, [connectedAddress]);
 
   return (
