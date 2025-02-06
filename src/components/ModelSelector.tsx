@@ -13,7 +13,7 @@ const models: AIModel[] = [
     id: 'openai', 
     name: 'Open AI', 
     icon: '/icons/openai.png',
-    gradient: 'bg-gradient-to-r from-green-600 to-green-500',
+    gradient: 'bg-gradient-to-r from-[#74AA9C] to-[#5C8B80]',
     textColor: 'text-white'
   },
   { 
@@ -27,7 +27,7 @@ const models: AIModel[] = [
     id: 'claude', 
     name: 'Claude', 
     icon: '/icons/claude.png',
-    gradient: 'bg-gradient-to-r from-orange-400 to-amber-400',
+    gradient: 'bg-gradient-to-r from-[#da7756] to-[#c25a3a]',
     textColor: 'text-white'
   },
   { 
