@@ -8,7 +8,6 @@ import { TokenBox } from '../../components/responses/TokenBox';
 import { WalletProvider, ConnectionProvider, useWallet } from '@solana/wallet-adapter-react';
 import { CoinbaseWalletAdapter, SolflareWalletAdapter, PhantomWalletAdapter } from '@solana/wallet-adapter-wallets';
 import { useRouter } from 'next/navigation';
-import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { clusterApiUrl } from '@solana/web3.js';
 import ConnectPromptModal from '../../components/ConnectPromptModal';
 import WalletModal from '../../components/WalletModal';
@@ -22,6 +21,7 @@ interface Message {
   timestamp: Date;
   isPortfolio?: boolean;
   tokenData?: any;
+  portfolioData?: any;
 }
 
 interface AIAssistantProps {
@@ -38,6 +38,15 @@ function AIAssistant({ address, chatId, chats, onUpdateChat, onFirstMessage }: A
   const [selectedModel, setSelectedModel] = useState('openai');
   const [portfolioData, setPortfolioData] = useState(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Restore portfolio data from the current chat if it exists
+    const currentChat = chats.find(chat => chat.id === chatId);
+    const portfolioMessage = currentChat?.messages.find(msg => msg.isPortfolio);
+    if (portfolioMessage && portfolioMessage.portfolioData) {
+      setPortfolioData(portfolioMessage.portfolioData);
+    }
+  }, [chatId, chats]);
 
   const currentChat = chats.find(chat => chat.id === chatId);
   const messages = currentChat?.messages || [];
@@ -79,7 +88,7 @@ function AIAssistant({ address, chatId, chats, onUpdateChat, onFirstMessage }: A
       const data = await response.json();
       if (data.portfolioData) {
         setPortfolioData(data.portfolioData);
-        onUpdateChat([...newMessages, { role: 'assistant', content: null, timestamp: new Date(), isPortfolio: true }]);
+        handlePortfolioResponse(newMessages, data.portfolioData);
       } else if (data.tokenData) {
         onUpdateChat([...newMessages, { role: 'assistant', content: null, timestamp: new Date(), tokenData: data.tokenData }]);
       } else {
@@ -101,6 +110,16 @@ function AIAssistant({ address, chatId, chats, onUpdateChat, onFirstMessage }: A
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handlePortfolioResponse = (newMessages: Message[], data: any) => {
+    onUpdateChat([...newMessages, { 
+      role: 'assistant', 
+      content: null, 
+      timestamp: new Date(), 
+      isPortfolio: true,
+      portfolioData: data
+    }]);
   };
 
   return (
@@ -156,7 +175,7 @@ function AIAssistant({ address, chatId, chats, onUpdateChat, onFirstMessage }: A
                     className={`max-w-[80%] rounded-lg px-4 py-2 ${
                       message.role === 'user'
                         ? 'bg-teal-500 text-white'
-                        : 'bg-gray-100 text-gray-900'
+                        : 'bg-white text-gray-900'
                     }`}
                   >
                     {message.isPortfolio ? (
@@ -215,19 +234,32 @@ interface Chat {
   messages: Message[];
 }
 
-const ChatContent = () => {
+function ChatContent() {
   const router = useRouter();
-  const [connectedAddress, setConnectedAddress] = useState<string | null>(null);
+  const { publicKey, connected, disconnect } = useWallet();
   const [showConnectPrompt, setShowConnectPrompt] = useState(false);
+  const [connectedAddress, setConnectedAddress] = useState<string | null>(null);
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
   const [chats, setChats] = useState<Chat[]>([]);
   const [activeChat, setActiveChat] = useState('');
-  const { disconnect, wallet } = useWallet();
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    if (connectedAddress) {
-      const savedChats = localStorage.getItem(`chats-${connectedAddress}`);
-      const savedActiveChat = localStorage.getItem(`activeChat-${connectedAddress}`);
+    const storedAddress = localStorage.getItem('connectedAddress');
+    if (!connected && storedAddress) {
+      setShowConnectPrompt(true);
+    }
+    setIsInitialized(true);
+  }, []);
+
+  useEffect(() => {
+    if (connected && publicKey) {
+      const address = publicKey.toBase58();
+      setConnectedAddress(address);
+      localStorage.setItem('connectedAddress', address);
+      
+      const savedChats = localStorage.getItem(`chats-${address}`);
+      const savedActiveChat = localStorage.getItem(`activeChat-${address}`);
       
       if (savedChats) {
         setChats(JSON.parse(savedChats));
@@ -237,8 +269,10 @@ const ChatContent = () => {
         setChats([defaultChat]);
         setActiveChat(defaultChat.id);
       }
+    } else if (isInitialized && !connected && !localStorage.getItem('connectedAddress')) {
+      router.push('/login');
     }
-  }, [connectedAddress]);
+  }, [connected, publicKey, isInitialized]);
 
   useEffect(() => {
     if (connectedAddress && chats.length > 0) {
@@ -249,7 +283,7 @@ const ChatContent = () => {
 
   const handleDisconnect = useCallback(async () => {
     try {
-      if (wallet) {
+      if (publicKey) {
         await disconnect();
       }
       localStorage.removeItem('connectedAddress');
@@ -266,7 +300,7 @@ const ChatContent = () => {
     } catch (error) {
       console.error('Error disconnecting wallet:', error);
     }
-  }, [disconnect, wallet, connectedAddress]);
+  }, [disconnect, publicKey, connectedAddress]);
 
   const handleWalletConnect = useCallback((address: string) => {
     localStorage.setItem('connectedAddress', address);
@@ -297,15 +331,8 @@ const ChatContent = () => {
     }));
   };
 
-  useEffect(() => {
-    const storedAddress = localStorage.getItem('connectedAddress');
-    if (storedAddress && !connectedAddress) {
-      setConnectedAddress(storedAddress);
-    }
-  }, []);
-
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gray-50">
       <TopBar 
         onConnect={() => setIsWalletModalOpen(true)}
         connectedAddress={connectedAddress}
@@ -348,7 +375,7 @@ const ChatContent = () => {
         </div>
         
         <div className="flex-1 p-2">
-          <div className="bg-white rounded-lg shadow-md overflow-y-auto h-full">
+          <div className="bg-transparent rounded-lg overflow-y-auto h-full">
             <AIAssistant 
               address={connectedAddress || undefined} 
               chatId={activeChat}
@@ -370,7 +397,7 @@ const ChatContent = () => {
       </div>
     </div>
   );
-};
+}
 
 const Chat = () => {
   const wallets = useMemo(() => [
@@ -381,7 +408,7 @@ const Chat = () => {
 
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect={true}>
+      <WalletProvider wallets={wallets} autoConnect>
         <ChatContent />
       </WalletProvider>
     </ConnectionProvider>

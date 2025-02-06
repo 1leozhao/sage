@@ -6,9 +6,11 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 
 interface Token {
   symbol: string;
+  name: string;
   balance: number;
   value: number;
   price: number;
+  icon: string;
 }
 
 interface PortfolioData {
@@ -22,13 +24,13 @@ export function PortfolioBox({ portfolioData }: { portfolioData: PortfolioData |
     return <div className="text-gray-500">No portfolio data available.</div>;
   }
 
-  const { address, totalValue, tokens } = portfolioData;
+  const { address, totalValue = 0, tokens = [] } = portfolioData;
 
   const data = {
     labels: tokens.map(token => token.symbol),
     datasets: [
       {
-        data: tokens.map(token => token.value),
+        data: tokens.map(token => Number(token.value) || 0),
         backgroundColor: [
           '#FF6384',
           '#36A2EB',
@@ -50,13 +52,13 @@ export function PortfolioBox({ portfolioData }: { portfolioData: PortfolioData |
   };
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-md border-2 border-gradient-to-r from-emerald-500 to-teal-500">
+    <div className="p-6 bg-transparent rounded-lg">
       <h2 className="text-xl font-bold mb-4">Portfolio Summary</h2>
       <div className="mb-2">
         <span className="font-semibold">Wallet Address:</span> {address}
       </div>
       <div className="mb-4">
-        <span className="font-semibold">Total Value:</span> ${totalValue.toFixed(2)}
+        <span className="font-semibold">Total Value:</span> ${Number(totalValue || 0).toFixed(2)}
       </div>
       <div>
         <span className="font-semibold">Assets:</span>
@@ -65,7 +67,10 @@ export function PortfolioBox({ portfolioData }: { portfolioData: PortfolioData |
             {tokens.map((token, index) => (
               <li key={index} className="flex justify-between">
                 <span>{token.symbol}</span>
-                <span>{token.balance.toFixed(4)} ($ {token.value.toFixed(2)} @ $ {token.price.toFixed(2)})</span>
+                <span>
+                  {Number(token.balance || 0).toFixed(4)} 
+                  ($ {Number(token.value || 0).toFixed(2)} @ $ {Number(token.price || 0).toFixed(2)})
+                </span>
               </li>
             ))}
           </ul>

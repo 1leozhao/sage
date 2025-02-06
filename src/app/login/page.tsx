@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import TopBar from '../../components/TopBar';
 import WalletModal from '../../components/WalletModal';
-import { WalletProvider, ConnectionProvider } from '@solana/wallet-adapter-react';
+import { WalletProvider, ConnectionProvider, useWallet } from '@solana/wallet-adapter-react';
 import { PhantomWalletAdapter, SolflareWalletAdapter, CoinbaseWalletAdapter } from '@solana/wallet-adapter-wallets';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { clusterApiUrl } from '@solana/web3.js';
@@ -18,16 +18,15 @@ export default function Login() {
   const [connectedAddress, setConnectedAddress] = useState<string | null>(null);
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { connected } = useWallet();
 
   useEffect(() => {
-    console.log('Checking local storage for connected address');
     const storedAddress = localStorage.getItem('connectedAddress');
-    if (storedAddress) {
-      console.log('Found stored address:', storedAddress);
+    if (storedAddress && connected) {
       setConnectedAddress(storedAddress);
       setIsLoggedIn(true);
     }
-  }, []);
+  }, [connected]);
 
   useEffect(() => {
     console.log('isLoggedIn changed:', isLoggedIn);

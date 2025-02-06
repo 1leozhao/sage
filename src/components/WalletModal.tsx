@@ -37,7 +37,7 @@ export default function WalletModal({
         navigate('/chat');
       }
     }
-  }, [connected, publicKey, onWalletConnect, onClose, navigate, hasNavigated]);
+  }, [connected, publicKey, hasNavigated, onWalletConnect, onClose, navigate]);
 
   useEffect(() => {
     if (!isOpen) {
